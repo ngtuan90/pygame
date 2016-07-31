@@ -1,2 +1,4 @@
 # pygame
-small game written in python with pygame
+small games written in python with pygame
++ PyShooter: Simple and Funny Shooter Game.
+ 
