@@ -5,12 +5,11 @@ import pygame, sys
 from pygame.locals import *
 
 pygame.init()
-screen = pygame.display.set_mode((200, 150),0 , 32)
-backgroundfile = "blade.jpg"
-mousefile="ball.gif"
+screen = pygame.display.set_mode((800, 6000),0 , 32)
 
-background = pygame.image.load(backgroundfile).convert()
-mouse = pygame.image.load(mousefile).convert()
+background = pygame.Surface(screen.get_size())
+background.fill((0, 0, 0))
+
 
 while True:
 	for event in pygame.event.get():
@@ -22,10 +21,7 @@ while True:
 	
 	
 	x,y = pygame.mouse.get_pos()
-	
-	x -= mouse.get_width()/2
-	y -=mouse.get_height()/2
-	
-	screen.blit(mouse, (x,y))
+		
+	pygame.draw.circle(screen, (255,255,255), (x,y), 10, 0) 
 	
 	pygame.display.update()

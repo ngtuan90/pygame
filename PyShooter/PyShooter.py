@@ -39,6 +39,8 @@ class crosshairsClass(pygame.sprite.Sprite):
 		self.rect.center = position
 		
 class enemyClass(pygame.sprite.Sprite):
+	
+	
 		'''construcor'''
 		def __init__(self, starty, speed):
 			'''initialize the super sprite class'''
@@ -56,6 +58,9 @@ class enemyClass(pygame.sprite.Sprite):
 			
 			self.enemyspeed = speed
 			
+		def increaseSpeed(self):
+			self.enemyspeed += 10
+			
 		def update(self):
 			
 			'''add enemy speed to current rectangle y value so it moves horizotally across the screen'''
@@ -66,9 +71,12 @@ class enemyClass(pygame.sprite.Sprite):
 			
 			'''if the left edge of enemy >= edge of screen then reset '''
 			if self.rect.left >= screenrect.right:
-				self.rect.right = 0
-				'''random y position of enemy'''
-				self.rect.top = self.randomYValue(screenrect)
+				self.reDraw(screenrect)
+				
+		def reDraw(self, screenrect):
+			self.rect.right = 0
+			'''random y position of enemy'''
+			self.rect.top = self.randomYValue(screenrect)
 				
 		def randomYValue(self, screenrect):
 			startrange = self.rect.height
@@ -80,7 +88,38 @@ class enemyClass(pygame.sprite.Sprite):
 			
 		def draw(self):
 			screen.blit(self.image, (0,0))
+			
+		def stop(self):
+			self.rect.right = 0
+			self.rect.top = 0
+			self.draw()
 	
+class scoreClass:
+	def __init__(self):
+		self.value = 0
+		'''Set a fone default font with size'''
+		self.font = pygame.font.Font(None, 50)
+		
+	def update(self):
+		'''Font.render (text, fontSmoothing, colour(rgb))'''
+		text = self.font.render("Score: %s" % self.value, 1, (255, 255, 255))
+		textRect = text.get_rect()
+		screenrect = screen.get_rect()
+		textRect.centerx = screenrect.width - textRect.width
+		screen.blit(text, textRect)
+		
+class bulletClass:
+	def __init__(self, value):
+		pygame.sprite.Sprite.__init__(self)
+		bulletfile = "bullet.png"
+		self.quatity = value
+		self.image = pygame.image.load(bulletfile).convert_alpha()
+		self.rect = self.image.get_rect()
+				
+	def draw(self):
+		for num in range(self.quatity):
+			screen.blit(self.image, (0+num*20,0))
+
 def eventHandling():
 	'''handle event'''
 	for event in pygame.event.get():
@@ -91,10 +130,52 @@ def eventHandling():
 		if event.type == MOUSEBUTTONDOWN:
 			'''Mouse clicked so if sprites rectangles collide the pygame.sprite.collide_rect returns 
 			eighter True of False'''
-			hit = pygame.sprite.collide_rect(crosshairs, enemy)
+			hit = enemy.rect.collidepoint(crosshairs.rect.centerx, crosshairs.rect.centery)
 			
 			if hit == True:
-				print "hit"
+				score.value += 1
+				enemy.reDraw(screen.get_rect())
+				enemy.increaseSpeed()
+			else:
+				bullet.quatity -= 1
+				screen.blit(background.image, (0, 0+bullet.quatity*20), pygame.Rect(0, 0+bullet.quatity*20, 50, 50))
+				if (bullet.quatity == 0):
+					gameOver()
+					
+def gameOver():
+	drawGameOver()
+	while True:
+		''' Pause Until Input is Given '''
+		e = pygame.event.wait()
+		if e.type in (pygame.QUIT, pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
+			pygame.quit()
+			sys.exit()
+	
+
+def drawGameOver():
+    ''' Display GameOver Text '''
+    font = pygame.font.Font(None, 50)
+    text1 = font.render("GAME OVER", 1, (255, 0, 0))
+    text1pos = text1.get_rect()
+    text1pos.centerx = screen.get_rect().centerx 
+    text1pos.centery = screen.get_rect().centery - 50
+    screen.blit(text1, text1pos)
+    
+    ''' Display GameOver Text '''
+    font = pygame.font.Font(None, 45)
+    text2 = font.render("Total Score: %s" % score.value, 1, (255, 0, 0))
+    text2pos = text1.get_rect()
+    text2pos.centerx = screen.get_rect().centerx
+    text2pos.centery = screen.get_rect().centery
+    screen.blit(text2, text2pos)
+    
+    font = pygame.font.Font(None, 36)
+    text3 = font.render("Press Any Key to Quit", 1, (255, 0, 0))
+    text3pos = text2.get_rect()
+    text3pos.centerx = screen.get_rect().centerx
+    text3pos.centery = screen.get_rect().centery + 50
+    screen.blit(text3, text3pos)
+    pygame.display.flip()
 
 '''initialize the display and environment varianles'''
 initPyGame()
@@ -111,9 +192,13 @@ framesPerSecond = 20
 '''declare the class instances to used in game loop'''
 background = backgroundClass()
 crosshairs = crosshairsClass()
+score = scoreClass()
+bulletsNum = 5
+bullet = bulletClass(bulletsNum)
+speed = 10
 
 '''innitialize an instance of pi class with start y = 70 and speed of 10'''
-enemy = enemyClass(70 , 10)
+enemy = enemyClass(70 , speed)
 
 ''' create a sprite group which will contain all our sprites
 This sprite groupd can draw all the sprites it contains to the screen'''
@@ -123,6 +208,8 @@ while True:
 	clock.tick(framesPerSecond)
 	eventHandling()
 	background.draw()
+	bullet.draw()
+	score.update()
 	
 	allsprites.update()
 	allsprites.draw(screen)
